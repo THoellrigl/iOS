@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  MealViewController.swift
 //  FoodTracker
 //
 //  Created by Dr. Thorsten Hoellrigl on 06/05/16.
@@ -8,13 +8,22 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class MealViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     //MARK: Properties
     @IBOutlet weak var nameTextField: UITextField!
-    @IBOutlet weak var mealNameLabel: UILabel!
     @IBOutlet weak var photoImageView: UIImageView!
     @IBOutlet weak var ratingControl: RatingControl!
+    @IBOutlet weak var saveButton: UIBarButtonItem!
+    @IBOutlet weak var cancelButton: UIBarButtonItem!
+    
+    /*
+     This value is either passed by `MealTableViewController` in `prepareForSegue(_:sender:)`
+     or constructed as part of adding a new meal.
+     */
+    var meal: Meal?
+    
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +35,18 @@ class ViewController: UIViewController, UITextFieldDelegate, UIImagePickerContro
         //The ViewController can then act to the event, for example, by updating the View
         
         nameTextField.delegate = self
+        
+        if let meal = meal {
+            navigationItem.title = meal.name
+            nameTextField.text = meal.name
+            photoImageView.image = meal.photo
+            ratingControl.rating = meal.rating
+        }
+        
+        //Disable the save button while no name for the meal has been added
+        checkValidName()
+        
+
     }
     
     //MARK: UITextFieldDelegate
@@ -39,10 +60,36 @@ class ViewController: UIViewController, UITextFieldDelegate, UIImagePickerContro
         return true
     }
     
-    func textFieldDidEndEditing(textField: UITextField) {
-        // Take the input from the textfield and set the label to the value of the textfield
+    func textFieldDidBeginEditing(textField: UITextField) {
         
-        mealNameLabel.text = textField.text
+        //disable the edit button while typing a name
+        
+        let text = textField.text ?? ""
+        
+        if text.isEmpty {
+        
+        saveButton.enabled = false
+            
+        }
+        
+    }
+    
+    func checkValidName() {
+        
+        //disable the save button if the textfield is empty
+        let text = nameTextField.text ?? ""
+        saveButton.enabled = !text.isEmpty
+    }
+    
+    func textFieldDidEndEditing(textField: UITextField) {
+        
+        //check if the textfield is empty
+        checkValidName()
+        
+        //set Sequelname to the name of the meal that should be added
+        navigationItem.title = textField.text
+        
+        
     }
     
     //MARK: UIImagePickerControllerDelegate
@@ -68,6 +115,25 @@ class ViewController: UIViewController, UITextFieldDelegate, UIImagePickerContro
         
         dismissViewControllerAnimated(true, completion: nil)
     }
+    
+    
+    //MARK: Navigation
+    
+    
+    @IBAction func cancel(sender: UIBarButtonItem) {
+        // Depending on style of presentation (modal or push presentation), this view controller needs to be dismissed in two different ways.
+        let isPresentingInAddMealMode = presentingViewController is UINavigationController
+        
+        if isPresentingInAddMealMode {
+            dismissViewControllerAnimated(true, completion: nil)
+        }
+        else {
+            navigationController!.popViewControllerAnimated(true)
+        }
+    }
+    
+
+
 
     
     //MARK: Actions
